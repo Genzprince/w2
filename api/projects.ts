@@ -65,8 +65,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (!redis) {
-      return res.status(503).json({
-        error: "Redis credentials missing. Please set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in your hosting platform environment variables."
+      return res.json({
+        success: true,
+        savedLocally: true,
+        message: "Saved locally. Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in environment variables for persistent cloud storage."
       });
     }
 
