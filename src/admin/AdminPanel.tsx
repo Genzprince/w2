@@ -124,14 +124,35 @@ export default function AdminPanel() {
         throw new Error(`API returned status ${res.status}`);
       }
       const data = await res.json();
-      if (Array.isArray(data)) {
-        setProjects(data);
+      
+      let finalData = data;
+      const localSaved = localStorage.getItem("portfolio_projects_custom");
+      
+      if (JSON.stringify(data) === JSON.stringify(PORTFOLIO_PROJECTS) && localSaved) {
+        try {
+          finalData = JSON.parse(localSaved);
+        } catch {}
+      } else if (Array.isArray(data) && data.length > 0) {
+        localStorage.setItem("portfolio_projects_custom", JSON.stringify(data));
+      }
+      
+      if (Array.isArray(finalData)) {
+        setProjects(finalData);
       } else {
         setProjects(PORTFOLIO_PROJECTS);
       }
     } catch (e) {
       console.error("Failed to load projects inside AdminPanel:", e);
-      setProjects(PORTFOLIO_PROJECTS);
+      const localSaved = localStorage.getItem("portfolio_projects_custom");
+      if (localSaved) {
+        try {
+          setProjects(JSON.parse(localSaved));
+        } catch {
+          setProjects(PORTFOLIO_PROJECTS);
+        }
+      } else {
+        setProjects(PORTFOLIO_PROJECTS);
+      }
     } finally {
       setLoading(false);
     }
@@ -142,6 +163,9 @@ export default function AdminPanel() {
     setSaveMsg("");
     const savedPasscode = sessionStorage.getItem("portfolio_admin_passcode") || ADMIN_PASSWORD;
     try {
+      // Save locally first
+      localStorage.setItem("portfolio_projects_custom", JSON.stringify(updated));
+      
       const res = await fetch("/api/projects", {
         method: "PUT",
         headers: { "Content-Type": "application/json", "x-admin-password": savedPasscode },
@@ -152,11 +176,15 @@ export default function AdminPanel() {
         setTimeout(() => setSaveMsg(""), 3000);
         return;
       }
-      setSaveMsg(res.ok ? "✓ Changes Saved Successfully" : "✗ Failed to save changes");
-      setTimeout(() => setSaveMsg(""), 3000);
+      if (res.ok) {
+        setSaveMsg("✓ Changes Saved Successfully");
+      } else {
+        setSaveMsg("✓ Saved Locally (Set Redis env vars for global cloud sync)");
+      }
+      setTimeout(() => setSaveMsg(""), 4000);
     } catch {
-      setSaveMsg("✗ Network error saving projects");
-      setTimeout(() => setSaveMsg(""), 3000);
+      setSaveMsg("✓ Saved Locally (Offline mode)");
+      setTimeout(() => setSaveMsg(""), 4000);
     } finally {
       setSaving(false);
     }

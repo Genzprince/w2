@@ -33,13 +33,36 @@ export function useProjects() {
       const res = await fetch("/api/projects");
       if (!res.ok) throw new Error("API unavailable");
       const data = await res.json();
-      const mapped = data.map((p: any) => ({
+      
+      let finalData = data;
+      const localSaved = localStorage.getItem("portfolio_projects_custom");
+      
+      // If server returned default projects but we have custom local changes, use local changes!
+      if (JSON.stringify(data) === JSON.stringify(PORTFOLIO_PROJECTS) && localSaved) {
+        try {
+          finalData = JSON.parse(localSaved);
+        } catch {}
+      } else if (Array.isArray(data) && data.length > 0) {
+        // Server returned custom data, save/sync to localStorage
+        localStorage.setItem("portfolio_projects_custom", JSON.stringify(data));
+      }
+
+      const mapped = finalData.map((p: any) => ({
         ...p,
         youtubeEmbed: p.youtubeEmbed || getYoutubeEmbedUrl(p.youtubeLink)
       }));
       setProjects(mapped);
     } catch {
-      const mapped = PORTFOLIO_PROJECTS.map((p: any) => ({
+      let fallbackData = PORTFOLIO_PROJECTS;
+      const localSaved = localStorage.getItem("portfolio_projects_custom");
+      if (localSaved) {
+        try {
+          fallbackData = JSON.parse(localSaved);
+        } catch (e) {
+          console.error("Failed to parse local saved projects", e);
+        }
+      }
+      const mapped = fallbackData.map((p: any) => ({
         ...p,
         youtubeEmbed: p.youtubeEmbed || getYoutubeEmbedUrl(p.youtubeLink)
       }));
