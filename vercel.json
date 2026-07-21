@@ -4,6 +4,7 @@
   "rewrites": [
     { "source": "/api/projects", "destination": "/api/projects" },
     { "source": "/api/chat", "destination": "/api/chat" },
+    { "source": "/api/admin/verify", "destination": "/api/admin/verify" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
