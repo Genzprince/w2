@@ -5,7 +5,7 @@ import {
   Video, Link, Calendar, Clock, Sparkles, Lock, Unlock, 
   Globe, Image as ImageIcon, Tag, FolderOpen, Star, Sparkle, Settings2, Info, Eye
 } from "lucide-react";
-import { Project } from "../types";
+import { Project, PORTFOLIO_PROJECTS } from "../types";
 
 const ADMIN_PASSWORD = "prince2026";
 
@@ -120,10 +120,18 @@ export default function AdminPanel() {
   const fetchProjects = async () => {
     try {
       const res = await fetch("/api/projects");
+      if (!res.ok) {
+        throw new Error(`API returned status ${res.status}`);
+      }
       const data = await res.json();
-      setProjects(data);
+      if (Array.isArray(data)) {
+        setProjects(data);
+      } else {
+        setProjects(PORTFOLIO_PROJECTS);
+      }
     } catch (e) {
-      console.error(e);
+      console.error("Failed to load projects inside AdminPanel:", e);
+      setProjects(PORTFOLIO_PROJECTS);
     } finally {
       setLoading(false);
     }
