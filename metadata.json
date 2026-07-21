@@ -1,0 +1,6 @@
+{
+  "name": "GillaX Portfolio",
+  "description": "Premium Cinematic Portfolio Website for GillaX - Professional Video Editing, Script Writing, and Motion Design.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
