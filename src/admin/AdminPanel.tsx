@@ -125,19 +125,9 @@ export default function AdminPanel() {
       }
       const data = await res.json();
       
-      let finalData = data;
-      const localSaved = localStorage.getItem("portfolio_projects_custom");
-      
-      if (JSON.stringify(data) === JSON.stringify(PORTFOLIO_PROJECTS) && localSaved) {
-        try {
-          finalData = JSON.parse(localSaved);
-        } catch {}
-      } else if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data) && data.length > 0) {
         localStorage.setItem("portfolio_projects_custom", JSON.stringify(data));
-      }
-      
-      if (Array.isArray(finalData)) {
-        setProjects(finalData);
+        setProjects(data);
       } else {
         setProjects(PORTFOLIO_PROJECTS);
       }
@@ -163,7 +153,7 @@ export default function AdminPanel() {
     setSaveMsg("");
     const savedPasscode = sessionStorage.getItem("portfolio_admin_passcode") || ADMIN_PASSWORD;
     try {
-      // Save locally first
+      // Save locally as a backup
       localStorage.setItem("portfolio_projects_custom", JSON.stringify(updated));
       
       const res = await fetch("/api/projects", {
@@ -177,13 +167,13 @@ export default function AdminPanel() {
         return;
       }
       if (res.ok) {
-        setSaveMsg("✓ Changes Saved Successfully");
+        setSaveMsg("✓ Saved to Database successfully!");
       } else {
-        setSaveMsg("✓ Saved Locally (Set Redis env vars for global cloud sync)");
+        setSaveMsg("✓ Saved Locally (Offline fallback)");
       }
       setTimeout(() => setSaveMsg(""), 4000);
     } catch {
-      setSaveMsg("✓ Saved Locally (Offline mode)");
+      setSaveMsg("✓ Saved Locally (Offline fallback)");
       setTimeout(() => setSaveMsg(""), 4000);
     } finally {
       setSaving(false);

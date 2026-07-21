@@ -4,6 +4,7 @@ import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import { getProjects, saveProjects } from "./src/db/helpers.ts";
 
 dotenv.config();
 
@@ -33,12 +34,13 @@ async function startServer() {
   const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "prince2026";
 
   // GET all projects
-  app.get("/api/projects", (_req, res) => {
+  app.get("/api/projects", async (_req, res) => {
     try {
-      const data = fs.readFileSync(PROJECTS_FILE, "utf-8");
-      res.json(JSON.parse(data));
-    } catch {
-      res.status(500).json({ error: "Could not read projects." });
+      const data = await getProjects();
+      res.json(data);
+    } catch (err: any) {
+      console.error("GET /api/projects error:", err);
+      res.status(500).json({ error: "Could not read projects from database." });
     }
   });
 
@@ -53,11 +55,11 @@ async function startServer() {
   });
 
   // PUT (full replace) projects — password protected
-  app.put("/api/projects", (req, res) => {
+  app.put("/api/projects", async (req, res) => {
     const auth = req.headers["x-admin-password"];
     if (auth !== ADMIN_PASSWORD) return res.status(401).json({ error: "Unauthorized" });
     try {
-      fs.writeFileSync(PROJECTS_FILE, JSON.stringify(req.body, null, 2), "utf-8");
+      await saveProjects(req.body);
       res.json({ success: true });
     } catch (err) {
       console.error("PUT /api/projects error:", err);

@@ -34,25 +34,20 @@ export function useProjects() {
       if (!res.ok) throw new Error("API unavailable");
       const data = await res.json();
       
-      let finalData = data;
-      const localSaved = localStorage.getItem("portfolio_projects_custom");
-      
-      // If server returned default projects but we have custom local changes, use local changes!
-      if (JSON.stringify(data) === JSON.stringify(PORTFOLIO_PROJECTS) && localSaved) {
-        try {
-          finalData = JSON.parse(localSaved);
-        } catch {}
-      } else if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data) && data.length > 0) {
         // Server returned custom data, save/sync to localStorage
         localStorage.setItem("portfolio_projects_custom", JSON.stringify(data));
+        
+        const mapped = data.map((p: any) => ({
+          ...p,
+          youtubeEmbed: p.youtubeEmbed || getYoutubeEmbedUrl(p.youtubeLink)
+        }));
+        setProjects(mapped);
+        return;
       }
-
-      const mapped = finalData.map((p: any) => ({
-        ...p,
-        youtubeEmbed: p.youtubeEmbed || getYoutubeEmbedUrl(p.youtubeLink)
-      }));
-      setProjects(mapped);
-    } catch {
+      throw new Error("Invalid database response format");
+    } catch (error) {
+      console.warn("Could not fetch projects from server. Using offline cache/static default:", error);
       let fallbackData = PORTFOLIO_PROJECTS;
       const localSaved = localStorage.getItem("portfolio_projects_custom");
       if (localSaved) {
