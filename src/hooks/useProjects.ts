@@ -33,31 +33,13 @@ export function useProjects() {
       const res = await fetch("/api/projects");
       if (!res.ok) throw new Error("API unavailable");
       const data = await res.json();
-      
-      if (Array.isArray(data) && data.length > 0) {
-        // Server returned custom data, save/sync to localStorage
-        localStorage.setItem("portfolio_projects_custom", JSON.stringify(data));
-        
-        const mapped = data.map((p: any) => ({
-          ...p,
-          youtubeEmbed: p.youtubeEmbed || getYoutubeEmbedUrl(p.youtubeLink)
-        }));
-        setProjects(mapped);
-        return;
-      }
-      throw new Error("Invalid database response format");
-    } catch (error) {
-      console.warn("Could not fetch projects from server. Using offline cache/static default:", error);
-      let fallbackData = PORTFOLIO_PROJECTS;
-      const localSaved = localStorage.getItem("portfolio_projects_custom");
-      if (localSaved) {
-        try {
-          fallbackData = JSON.parse(localSaved);
-        } catch (e) {
-          console.error("Failed to parse local saved projects", e);
-        }
-      }
-      const mapped = fallbackData.map((p: any) => ({
+      const mapped = data.map((p: any) => ({
+        ...p,
+        youtubeEmbed: p.youtubeEmbed || getYoutubeEmbedUrl(p.youtubeLink)
+      }));
+      setProjects(mapped);
+    } catch {
+      const mapped = PORTFOLIO_PROJECTS.map((p: any) => ({
         ...p,
         youtubeEmbed: p.youtubeEmbed || getYoutubeEmbedUrl(p.youtubeLink)
       }));

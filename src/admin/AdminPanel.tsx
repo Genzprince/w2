@@ -5,7 +5,7 @@ import {
   Video, Link, Calendar, Clock, Sparkles, Lock, Unlock, 
   Globe, Image as ImageIcon, Tag, FolderOpen, Star, Sparkle, Settings2, Info, Eye
 } from "lucide-react";
-import { Project, PORTFOLIO_PROJECTS } from "../types";
+import { Project } from "../types";
 
 const ADMIN_PASSWORD = "prince2026";
 
@@ -120,29 +120,10 @@ export default function AdminPanel() {
   const fetchProjects = async () => {
     try {
       const res = await fetch("/api/projects");
-      if (!res.ok) {
-        throw new Error(`API returned status ${res.status}`);
-      }
       const data = await res.json();
-      
-      if (Array.isArray(data) && data.length > 0) {
-        localStorage.setItem("portfolio_projects_custom", JSON.stringify(data));
-        setProjects(data);
-      } else {
-        setProjects(PORTFOLIO_PROJECTS);
-      }
+      setProjects(data);
     } catch (e) {
-      console.error("Failed to load projects inside AdminPanel:", e);
-      const localSaved = localStorage.getItem("portfolio_projects_custom");
-      if (localSaved) {
-        try {
-          setProjects(JSON.parse(localSaved));
-        } catch {
-          setProjects(PORTFOLIO_PROJECTS);
-        }
-      } else {
-        setProjects(PORTFOLIO_PROJECTS);
-      }
+      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -153,9 +134,6 @@ export default function AdminPanel() {
     setSaveMsg("");
     const savedPasscode = sessionStorage.getItem("portfolio_admin_passcode") || ADMIN_PASSWORD;
     try {
-      // Save locally as a backup
-      localStorage.setItem("portfolio_projects_custom", JSON.stringify(updated));
-      
       const res = await fetch("/api/projects", {
         method: "PUT",
         headers: { "Content-Type": "application/json", "x-admin-password": savedPasscode },
@@ -166,15 +144,11 @@ export default function AdminPanel() {
         setTimeout(() => setSaveMsg(""), 3000);
         return;
       }
-      if (res.ok) {
-        setSaveMsg("✓ Saved to Database successfully!");
-      } else {
-        setSaveMsg("✓ Saved Locally (Offline fallback)");
-      }
-      setTimeout(() => setSaveMsg(""), 4000);
+      setSaveMsg(res.ok ? "✓ Changes Saved Successfully" : "✗ Failed to save changes");
+      setTimeout(() => setSaveMsg(""), 3000);
     } catch {
-      setSaveMsg("✓ Saved Locally (Offline fallback)");
-      setTimeout(() => setSaveMsg(""), 4000);
+      setSaveMsg("✗ Network error saving projects");
+      setTimeout(() => setSaveMsg(""), 3000);
     } finally {
       setSaving(false);
     }
